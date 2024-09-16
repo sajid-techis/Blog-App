@@ -3,12 +3,13 @@ import axios from 'axios';
 import './App.css'
 
 const App = () => {
+  const apiUrl = process.env.REACT_APP_API_URL;
   const [posts, setPosts] = useState([]);
   const [form, setForm] = useState({ name: '', content: '', image: null });
   const [editingPost, setEditingPost] = useState(null);
 
   useEffect(() => {
-    axios.get('http://localhost:5003/api/posts').then((res) => setPosts(res.data));
+    axios.get(`${apiUrl}/api/posts`).then((res) => setPosts(res.data));
   }, []);
 
   const handleSubmit = async (e) => {
@@ -19,19 +20,19 @@ const App = () => {
     if (form.image) formData.append('image', form.image);
 
     if (editingPost) {
-      await axios.put(`http://localhost:5003/api/posts/${editingPost._id}`, formData);
+      await axios.put(`${apiUrl}/api/posts/${editingPost._id}`, formData);
       setEditingPost(null);
     } else {
-      await axios.post('http://localhost:5003/api/posts', formData);
+      await axios.post(`${apiUrl}/api/posts`, formData);
     }
 
     setForm({ name: '', content: '', image: null });
-    axios.get('http://localhost:5003/api/posts').then((res) => setPosts(res.data));
+    axios.get(`${apiUrl}/api/posts`).then((res) => setPosts(res.data));
   };
 
   const handleDelete = async (id) => {
-    await axios.delete(`http://localhost:5003/api/posts/${id}`);
-    axios.get('http://localhost:5003/api/posts').then((res) => setPosts(res.data));
+    await axios.delete(`${apiUrl}/api/posts/${id}`);
+    axios.get(`${apiUrl}/api/posts`).then((res) => setPosts(res.data));
   };
 
   const handleEdit = (post) => {
@@ -66,7 +67,7 @@ const App = () => {
           <div key={post._id} className="post">
             <h2>{post.name}</h2>
             <p>{post.content}</p>
-            {post.imageUrl && <img src={`http://localhost:5003${post.imageUrl}`} alt="Post" />}
+            {post.imageUrl && <img src={`${apiUrl}${post.imageUrl}`} alt="Post" />}
             <button onClick={() => handleEdit(post)} className='edit'>Edit</button>
             <button onClick={() => handleDelete(post._id)}>Delete</button>
           </div>
