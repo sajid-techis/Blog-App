@@ -2,18 +2,27 @@ const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const cors = require('cors');
-const bodyParser = require('body-parser');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 require('dotenv').config();
+
 const MONGO_URI = process.env.MONGO_URI;
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const app = express();
 app.use(cors({
-    origin: '*',
-    methods: 'GET,POST,PUT,DELETE',
-    allowedHeaders: 'Content-Type,Authorization',
-  }));
-  
-  app.options('*', cors());  // Handle preflight requests for all routes  
+  origin: '*',
+  methods: 'GET,POST,PUT,DELETE',
+  allowedHeaders: 'Content-Type,Authorization',
+}));
+
+app.options('*', cors()); // Handle preflight requests for all routes
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI)
@@ -29,18 +38,21 @@ const postSchema = new mongoose.Schema({
 
 const Post = mongoose.model('Post', postSchema);
 
-// Multer setup for image uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
+// Configure Cloudinary storage for multer
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'blog_images', // Folder where images will be stored in Cloudinary
+    allowedFormats: ['jpg', 'png', 'jpeg'],
+  },
 });
 
 const upload = multer({ storage });
 
-// Create a post
+// Create a post with image upload to Cloudinary
 app.post('/api/posts', upload.single('image'), async (req, res) => {
   const { name, content } = req.body;
-  const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+  const imageUrl = req.file ? req.file.path : null; // Cloudinary returns the full image URL in `path`
 
   const newPost = new Post({ name, content, imageUrl });
   await newPost.save();
@@ -56,7 +68,7 @@ app.get('/api/posts', async (req, res) => {
 // Edit a post
 app.put('/api/posts/:id', upload.single('image'), async (req, res) => {
   const { name, content } = req.body;
-  const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.imageUrl;
+  const imageUrl = req.file ? req.file.path : req.body.imageUrl; // Use Cloudinary URL or keep the original
 
   const updatedPost = await Post.findByIdAndUpdate(
     req.params.id,
@@ -71,8 +83,5 @@ app.delete('/api/posts/:id', async (req, res) => {
   await Post.findByIdAndDelete(req.params.id);
   res.json({ message: 'Post deleted' });
 });
-
-// Serve static image uploads
-app.use('/uploads', express.static('uploads'));
 
 app.listen(5003, () => console.log('Server running on port 5000'));
