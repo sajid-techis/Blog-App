@@ -8,9 +8,12 @@ const MONGO_URI = process.env.MONGO_URI;
 
 const app = express();
 app.use(cors({
-    origin: '*', 
-  }));  
-app.use(bodyParser.json());
+    origin: '*',
+    methods: 'GET,POST,PUT,DELETE',
+    allowedHeaders: 'Content-Type,Authorization',
+  }));
+  
+  app.options('*', cors());  // Handle preflight requests for all routes  
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
