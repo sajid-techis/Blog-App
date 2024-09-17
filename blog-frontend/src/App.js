@@ -7,7 +7,6 @@ const App = () => {
   const [posts, setPosts] = useState([]);
   const [form, setForm] = useState({ name: '', content: '', image: null });
   const [editingPost, setEditingPost] = useState(null);
-  const [loading, setLoading] = useState(false); // General loading state
   const [submitting, setSubmitting] = useState(false); // Loading for submit
   const [deleting, setDeleting] = useState({}); // Loading for individual deletes
   const [fetchingPosts, setFetchingPosts] = useState(true); // Loading for fetching posts
@@ -110,7 +109,7 @@ const App = () => {
             <div key={post._id} className="post">
               <h2>{post.name}</h2>
               <p>{post.content}</p>
-              {post.imageUrl && <img src={`${apiUrl}${post.imageUrl}`} alt="Post" />}
+              {post.imageUrl && <img src={post.imageUrl} alt="Post" />}
               <button onClick={() => handleEdit(post)} className="edit">Edit</button>
               <button onClick={() => handleDelete(post._id)} disabled={deleting[post._id]}>
                 {deleting[post._id] ? 'Deleting...' : 'Delete'}
